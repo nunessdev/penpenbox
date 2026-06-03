@@ -22,22 +22,26 @@ func main() {
 	err = os.MkdirAll(home+"/.local/share/penpenbox", os.ModePerm)
 	db, err := database.Open(path)
 	if err != nil {
-		return
+		fmt.Println(err)
 	}
 
 	// Create database
 	err = database.CreateDB(db)
 	if err != nil {
-		return
+		fmt.Println(err)
 	}
 
-	// Just a test for steam games fetching
+	// Fetch and insert steam games in the database
 	games, err := steam.GetGames(os.Getenv("STEAM_API_KEY"), os.Getenv("STEAM_ID"))
 	if err != nil {
-		fmt.Println("Error:", err)
+		fmt.Println(err)
 		return
 	}
-	for i := 0; i < len(games); i++ {
-		fmt.Println(games[i].Name)
+	for i := range games {
+		fmt.Printf("Inserting %s...\n", games[i].Name)
+		err := database.AddGame(db, games[i].AppId, games[i].Name, games[i].PlaytimeForever, "Steam")
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
