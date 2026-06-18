@@ -43,3 +43,25 @@ func AddGame(db *sql.DB, appid int, title string, playtime int, platform string)
 
 	return nil
 }
+
+func DeleteGame(db *sql.DB, appid int, title string) error {
+	query := `DELETE FROM games WHERE AppID = ?`
+
+	_, err := db.Exec(query, appid)
+	if err != nil {
+		return fmt.Errorf("Error deleting game entry: %w\n", err)
+	}
+
+	return nil
+}
+
+func ListGames(db *sql.DB) error {
+	query := `SELECT * FROM games`
+
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("Error listing game library: %w\n", err)
+	}
+
+	return nil
+}
