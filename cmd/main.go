@@ -38,10 +38,16 @@ func main() {
 		return
 	}
 	for i := range games {
-		fmt.Printf("Inserting %s...\n", games[i].Name)
-		err := database.AddGame(db, games[i].AppId, games[i].Name, games[i].PlaytimeForever, "Steam")
+		fmt.Printf("Inserting %s...\n", games[i].Title)
+		err := database.AddGame(db, games[i])
 		if err != nil {
 			fmt.Println(err)
 		}
+	}
+
+	// Test listing the games
+	err = database.ListGames(db)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
