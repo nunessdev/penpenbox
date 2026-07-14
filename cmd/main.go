@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/nunessdev/penpenbox/internal/database"
 	"github.com/nunessdev/penpenbox/internal/steam"
+	"github.com/nunessdev/penpenbox/internal/tui"
 )
 
 func main() {
@@ -49,5 +51,11 @@ func main() {
 	err = database.ListGames(db)
 	if err != nil {
 		fmt.Println(err)
+	}
+
+	p := tea.NewProgram(tui.NewPlatformModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Alas, there's been an error: %v", err)
+		os.Exit(1)
 	}
 }
