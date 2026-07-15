@@ -4,11 +4,41 @@ import (
 	"fmt"
 
 	tea "charm.land/bubbletea/v2"
+	lipgloss "charm.land/lipgloss/v2"
 )
+
+// Styles for different types of text
+var (
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			PaddingTop(2).
+			PaddingLeft(4)
+
+	textStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FAFAFA")).
+			PaddingLeft(4)
+
+	disabledStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#BABABA")).
+			PaddingLeft(4)
+
+	highlightedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#7D56F4")).
+				PaddingLeft(4)
+)
+
+type platformItem struct {
+	name     string
+	disabled bool
+}
 
 func NewPlatformModel() platformModel {
 	return platformModel{
-		platforms: []string{"Steam", "GOG (Coming soon??)"},
+		platforms: []platformItem{
+			{name: "Steam", disabled: false},
+			{name: "GOG (Coming soon??)", disabled: true},
+		},
 	}
 }
 
@@ -49,16 +79,26 @@ func (m platformModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m platformModel) View() tea.View {
-	s := "Select a platform to configure:\n\n"
+	s := titleStyle.Render("Select a platform to configure:") + "\n\n"
 
 	for i, choice := range m.platforms {
 		cursor := " "
 		if m.cursor == i {
+			// render cursor on selected item
 			cursor = ">"
+			if choice.disabled == false {
+				// selected option renders with an highlight
+				s += highlightedStyle.Render(fmt.Sprintf("%s %s", cursor, choice.name)) + "\n"
+			} else {
+				// disabled option appears grey when selected
+				s += disabledStyle.Render(fmt.Sprintf("%s %s", cursor, choice.name)) + "\n"
+			}
+		} else {
+			// option not selected, render plain text
+			s += textStyle.Render(fmt.Sprintf("%s %s", cursor, choice.name)) + "\n"
 		}
-		s += fmt.Sprintf("%s %s\n", cursor, choice)
 	}
-	s += "\nPress q to quit.\n"
+	s += "\n" + textStyle.Render("Press q to quit.") + "\n"
 
 	v := tea.NewView(s)
 	v.AltScreen = true
