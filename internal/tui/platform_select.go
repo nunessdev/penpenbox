@@ -4,28 +4,6 @@ import (
 	"fmt"
 
 	tea "charm.land/bubbletea/v2"
-	lipgloss "charm.land/lipgloss/v2"
-)
-
-// Styles for different types of text
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			PaddingTop(2).
-			PaddingLeft(4)
-
-	textStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FAFAFA")).
-			PaddingLeft(4)
-
-	disabledStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#BABABA")).
-			PaddingLeft(4)
-
-	highlightedStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#7D56F4")).
-				PaddingLeft(4)
 )
 
 type platformItem struct {
@@ -48,15 +26,15 @@ func (m platformModel) Update(msg tea.Msg) (platformModel, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
-		case "up", "k":
+		case "up":
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case "down", "j":
+		case "down":
 			if m.cursor < len(m.platforms)-1 {
 				m.cursor++
 			}
-		case "enter", "space":
+		case "enter":
 			if !m.platforms[m.cursor].disabled {
 				return m, func() tea.Msg { return openSteamSetupMsg{} }
 			}

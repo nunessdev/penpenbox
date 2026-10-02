@@ -2,6 +2,28 @@ package tui
 
 import (
 	tea "charm.land/bubbletea/v2"
+	lipgloss "charm.land/lipgloss/v2"
+)
+
+// Styles for different types of text
+var (
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#FAFAFA")).
+			PaddingTop(2).
+			PaddingLeft(4)
+
+	textStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FAFAFA")).
+			PaddingLeft(4)
+
+	disabledStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#BABABA")).
+			PaddingLeft(4)
+
+	highlightedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#7D56F4")).
+				PaddingLeft(4)
 )
 
 // screen identifies which screen is currently active.
