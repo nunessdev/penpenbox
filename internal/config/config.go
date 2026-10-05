@@ -10,8 +10,8 @@ import (
 
 // Config to save API key and Steam ID.
 type Config struct {
-	SteamID string `json:"steam_id"`
 	APIKey  string `json:"api_key"`
+	SteamID string `json:"steam_id"`
 }
 
 // Check if both values exist

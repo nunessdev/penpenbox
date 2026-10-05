@@ -3,6 +3,7 @@ package tui
 import (
 	tea "charm.land/bubbletea/v2"
 	lipgloss "charm.land/lipgloss/v2"
+	"github.com/nunessdev/penpenbox/internal/config"
 )
 
 // Styles for different types of text
@@ -37,6 +38,8 @@ const (
 // Messages that screens send to the root to request a switch.
 type openSteamSetupMsg struct{}
 type backToPlatformMsg struct{}
+type configSubmittedMsg struct{ apiKey, steamID string }
+type configSavedMsg struct{ err error }
 
 // Model is the root model. It owns every screen and tracks which is active.
 type Model struct {
@@ -73,6 +76,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case backToPlatformMsg:
 		m.screen = screenPlatform
 		return m, nil
+
+	case configSubmittedMsg:
+		return m, func() tea.Msg {
+			cfg := config.Config{
+				APIKey:  msg.apiKey,
+				SteamID: msg.steamID,
+			}
+			err := config.Save(cfg)
+			return configSavedMsg{err: err}
+		}
 	}
 
 	// Everything else goes to the active screen.

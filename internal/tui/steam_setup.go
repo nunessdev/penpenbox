@@ -55,7 +55,7 @@ func (m steamSetupModel) Update(msg tea.Msg) (steamSetupModel, tea.Cmd) {
 			if apiKey == "" || steamID == "" {
 				return m, nil // ignore until both fields are filled
 			}
-			return m, nil
+			return m, func() tea.Msg { return configSubmittedMsg{apiKey, steamID} }
 		}
 	}
 
