@@ -33,6 +33,7 @@ type screen int
 const (
 	screenPlatform screen = iota // iota makes these 0, 1, 2...
 	screenSteamSetup
+	screenLibrary
 )
 
 // Messages that screens send to the root to request a switch.
@@ -46,6 +47,7 @@ type Model struct {
 	screen   screen
 	platform platformModel
 	steam    steamSetupModel
+	library  libraryModel
 }
 
 func New() Model {
@@ -53,6 +55,7 @@ func New() Model {
 		screen:   screenPlatform,
 		platform: NewPlatformModel(),
 		steam:    NewSteamSetupModel(),
+		library:  NewLibraryModel(),
 	}
 }
 
@@ -68,15 +71,18 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+	// Steam Setup
 	case openSteamSetupMsg:
 		m.steam = NewSteamSetupModel() // start with a fresh form each time
 		m.screen = screenSteamSetup
 		return m, nil
 
+	// Back
 	case backToPlatformMsg:
 		m.screen = screenPlatform
 		return m, nil
 
+	// User submitted a config for Steam
 	case configSubmittedMsg:
 		return m, func() tea.Msg {
 			cfg := config.Config{
@@ -86,6 +92,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			err := config.Save(cfg)
 			return configSavedMsg{err: err}
 		}
+
+	case configSavedMsg:
+		if msg.err != nil {
+			return m, nil // save failed: TODO - Display an error message
+		}
+		m.screen = screenLibrary
+		return m, nil
 	}
 
 	// Everything else goes to the active screen.
@@ -93,8 +106,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.screen {
 	case screenPlatform:
 		m.platform, cmd = m.platform.Update(msg)
+
 	case screenSteamSetup:
 		m.steam, cmd = m.steam.Update(msg)
+
+	case screenLibrary:
+		m.library, cmd = m.library.Update(msg)
 	}
 	return m, cmd
 }
@@ -103,10 +120,15 @@ func (m Model) View() tea.View {
 	var content string
 
 	switch m.screen {
+
 	case screenPlatform:
 		content = m.platform.View()
+
 	case screenSteamSetup:
 		content = m.steam.View()
+
+	case screenLibrary:
+		content = m.library.View()
 	}
 
 	v := tea.NewView(content)

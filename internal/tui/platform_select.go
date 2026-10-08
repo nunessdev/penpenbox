@@ -11,6 +11,11 @@ type platformItem struct {
 	disabled bool
 }
 
+type platformModel struct {
+	platforms []platformItem // platforms in the list
+	cursor    int            // which platform the cursor is pointing at
+}
+
 func NewPlatformModel() platformModel {
 	return platformModel{
 		platforms: []platformItem{
