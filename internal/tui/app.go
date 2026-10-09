@@ -51,12 +51,20 @@ type Model struct {
 }
 
 func New() Model {
-	return Model{
+	m := Model{
 		screen:   screenPlatform,
 		platform: NewPlatformModel(),
 		steam:    NewSteamSetupModel(),
 		library:  NewLibraryModel(),
 	}
+
+	// If a valid config already exists, skip to library
+	cfg, err := config.Load()
+	if err == nil && cfg.HasSteam() {
+		m.screen = screenLibrary
+	}
+
+	return m
 }
 
 func (m Model) Init() tea.Cmd {

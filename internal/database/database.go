@@ -11,7 +11,7 @@ import (
 func Open(path string) (*sql.DB, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
-		return nil, fmt.Errorf("Error opening database: %w\n", err)
+		return nil, fmt.Errorf("open database: %w", err)
 	}
 	return db, nil
 }
@@ -19,7 +19,7 @@ func Open(path string) (*sql.DB, error) {
 func CreateDB(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS games (
-		AppID TEXT NOT NULL,
+		AppID INTEGER NOT NULL,
 		Title TEXT NOT NULL,
 		Playtime INTEGER,
 		Platform TEXT NOT NULL,
@@ -28,60 +28,59 @@ func CreateDB(db *sql.DB) error {
 
 	_, err := db.Exec(query)
 	if err != nil {
-		return fmt.Errorf("Error creating database: %w\n", err)
+		return fmt.Errorf("create games table: %w", err)
 	}
 
 	return nil
 }
 
 func AddGame(db *sql.DB, game models.Game) error {
-	query := `INSERT INTO games (AppID, Title, Playtime, Platform) VALUES (?, ?, ?, ?)`
+	query := `INSERT INTO games (AppID, Title, Playtime, Platform) VALUES (?, ?, ?, ?)
+			  ON CONFLICT(AppID, Platform) DO UPDATE SET Title = excluded.Title, Playtime = excluded.Playtime`
 
 	_, err := db.Exec(query, game.AppID, game.Title, game.Playtime, game.Platform)
 	if err != nil {
-		return fmt.Errorf("Error inserting game data: %w", err)
+		return fmt.Errorf("insert game: %w", err)
 	}
 
 	return nil
 }
 
-func DeleteGame(db *sql.DB, appid int) error {
-	query := `DELETE FROM games WHERE AppID = ?`
-
-	_, err := db.Exec(query, appid)
+func DeleteGame(db *sql.DB, appid int, platform string) error {
+	res, err := db.Exec(`DELETE FROM games WHERE AppID = ? AND Platform = ?`, appid, platform)
 	if err != nil {
-		return fmt.Errorf("Error deleting game entry: %w", err)
+		return fmt.Errorf("delete game: %w", err)
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete game: %w", err)
+	}
+	if n == 0 {
+		return fmt.Errorf("delete game: no game with appid %d on %s", appid, platform)
 	}
 
 	return nil
 }
 
-func ListGames(db *sql.DB) error {
-	query := `SELECT * FROM games`
-
-	rows, err := db.Query(query)
+func ListGames(db *sql.DB) ([]models.Game, error) {
+	rows, err := db.Query(`SELECT AppID, Title, Playtime, Platform FROM games ORDER BY Title COLLATE NOCASE`)
 	if err != nil {
-		return fmt.Errorf("Error listing game library: %w", err)
+		return nil, fmt.Errorf("list games: %w", err)
 	}
 	defer rows.Close()
 
+	var games []models.Game
 	for rows.Next() {
-		var appID int
-		var title, platform string
-		var playtime int
-
-		err = rows.Scan(&appID, &title, &playtime, &platform)
-		if err != nil {
-			return fmt.Errorf("Error scanning game row: %w\n", err)
+		var g models.Game
+		if err := rows.Scan(&g.AppID, &g.Title, &g.Playtime, &g.Platform); err != nil {
+			return nil, fmt.Errorf("scan game row: %w", err)
 		}
-
-		fmt.Printf("[%s] %s (playtime: %d min)\n", platform, title, playtime)
+		games = append(games, g)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate game rows: %w", err)
 	}
 
-	err = rows.Err()
-	if err != nil {
-		return fmt.Errorf("Error iterating game rows: %w\n", err)
-	}
-
-	return nil
+	return games, nil
 }

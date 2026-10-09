@@ -48,7 +48,7 @@ func GetGames(apiKey string, steamID string) ([]models.Game, error) {
 		games = append(games, models.Game{
 			AppID:    g.AppId,
 			Title:    g.Name,
-			Playtime: g.PlaytimeForever,
+			Playtime: &g.PlaytimeForever,
 			Platform: "steam",
 		})
 	}
