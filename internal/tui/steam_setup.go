@@ -76,5 +76,5 @@ func (m steamSetupModel) View() string {
 		textStyle.Render(m.apiKey.View()) + "\n" +
 		textStyle.Render(m.steamID.View()) + "\n" +
 		textStyle.Render("The config will be saved on ~/.config/penpenbox/") + "\n\n" +
-		textStyle.Render("up/down: switch field • enter: submit • esc: back") + "\n"
+		textStyle.Render("↑/↓: navigate • enter: submit • esc: back") + "\n"
 }

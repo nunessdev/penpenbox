@@ -3,19 +3,41 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/nunessdev/penpenbox/internal/models"
 	_ "modernc.org/sqlite"
 )
 
-func Open(path string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite", path)
+func Open() (*sql.DB, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("find home directory: %w", err)
+	}
+
+	dir := filepath.Join(home, ".local", "share", "penpenbox")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return nil, fmt.Errorf("create data directory: %w", err)
+	}
+
+	db, err := sql.Open("sqlite", filepath.Join(dir, "penpenbox.db"))
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
+
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("connect to database: %w", err)
+	}
+
+	if err := CreateDB(db); err != nil {
+		db.Close()
+		return nil, err
+	}
+
 	return db, nil
 }
-
 func CreateDB(db *sql.DB) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS games (

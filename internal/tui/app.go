@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"database/sql"
+
 	tea "charm.land/bubbletea/v2"
 	lipgloss "charm.land/lipgloss/v2"
 	"github.com/nunessdev/penpenbox/internal/config"
@@ -50,12 +52,12 @@ type Model struct {
 	library  libraryModel
 }
 
-func New() Model {
+func New(db *sql.DB) Model {
 	m := Model{
 		screen:   screenPlatform,
 		platform: NewPlatformModel(),
 		steam:    NewSteamSetupModel(),
-		library:  NewLibraryModel(),
+		library:  NewLibraryModel(db),
 	}
 
 	// If a valid config already exists, skip to library

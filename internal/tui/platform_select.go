@@ -68,7 +68,7 @@ func (m platformModel) View() string {
 			s += textStyle.Render(fmt.Sprintf("%s %s", cursor, choice.name)) + "\n"
 		}
 	}
-	s += "\n" + textStyle.Render("Press q to quit.") + "\n"
+	s += "\n" + textStyle.Render("↑/↓: navigate • enter: select • q: quit") + "\n"
 
 	return s
 }
