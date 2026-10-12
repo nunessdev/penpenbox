@@ -70,7 +70,7 @@ func New(db *sql.DB) Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return m.library.Init()
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -108,6 +108,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil // save failed: TODO - Display an error message
 		}
 		m.screen = screenLibrary
+		return m, nil
+
+	case tea.WindowSizeMsg, gamesLoadedMsg:
+		m.library, _ = m.library.Update(msg)
 		return m, nil
 	}
 
