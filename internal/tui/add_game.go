@@ -61,13 +61,13 @@ func (m addGameModel) Update(msg tea.Msg) (addGameModel, tea.Cmd) {
 		case "esc":
 			return m, func() tea.Msg { return openLibraryMsg{} }
 
-		case "up", "shift+tab":
+		case "up":
 			if m.focused > 0 {
 				m.setFocus(m.focused - 1)
 			}
 			return m, nil
 
-		case "down", "tab":
+		case "down":
 			if m.focused < 2 {
 				m.setFocus(m.focused + 1)
 			}

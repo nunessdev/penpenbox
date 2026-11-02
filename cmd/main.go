@@ -5,8 +5,6 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
-	// "github.com/nunessdev/penpenbox/internal/database"
-	// "github.com/nunessdev/penpenbox/internal/steam"
 	"github.com/nunessdev/penpenbox/internal/database"
 	"github.com/nunessdev/penpenbox/internal/tui"
 )

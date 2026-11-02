@@ -122,11 +122,11 @@ func (m libraryModel) Update(msg tea.Msg) (libraryModel, tea.Cmd) {
 		}
 
 		switch msg.String() {
-		case "up", "k":
+		case "up":
 			if m.cursor > 0 {
 				m.cursor--
 			}
-		case "down", "j":
+		case "down":
 			if m.cursor < len(m.games)-1 {
 				m.cursor++
 			}
