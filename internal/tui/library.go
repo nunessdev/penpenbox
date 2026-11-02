@@ -12,14 +12,15 @@ import (
 )
 
 type libraryModel struct {
-	db      *sql.DB
-	syncing bool
-	status  string
-	width   int
-	height  int
-	games   []models.Game
-	cursor  int // index of the selected game
-	offset  int // index of the first visible game
+	db            *sql.DB
+	syncing       bool
+	status        string
+	width         int
+	height        int
+	games         []models.Game
+	cursor        int // index of the selected game
+	offset        int // index of the first visible game
+	confirmDelete bool
 }
 
 func NewLibraryModel(db *sql.DB) libraryModel {
@@ -31,6 +32,8 @@ type gamesSyncedMsg struct {
 	count int
 	err   error
 }
+
+type gameDeletedMsg struct{ err error }
 
 func syncCmd(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
@@ -64,6 +67,12 @@ func loadGamesCmd(db *sql.DB) tea.Cmd {
 	return func() tea.Msg {
 		games, err := database.ListGames(db)
 		return gamesLoadedMsg{games: games, err: err}
+	}
+}
+
+func deleteCmd(db *sql.DB, g models.Game) tea.Cmd {
+	return func() tea.Msg {
+		return gameDeletedMsg{err: database.DeleteGame(db, g.AppID, g.Platform)}
 	}
 }
 
@@ -107,6 +116,11 @@ func (m libraryModel) Update(msg tea.Msg) (libraryModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 
+		if m.confirmDelete && msg.String() != "d" {
+			m.confirmDelete = false
+			m.status = ""
+		}
+
 		switch msg.String() {
 		case "up", "k":
 			if m.cursor > 0 {
@@ -118,6 +132,19 @@ func (m libraryModel) Update(msg tea.Msg) (libraryModel, tea.Cmd) {
 			}
 		case "c":
 			return m, func() tea.Msg { return backToPlatformMsg{} }
+
+		case "d":
+			if len(m.games) == 0 {
+				break
+			}
+			if !m.confirmDelete {
+				m.confirmDelete = true
+				m.status = "Press d again to delete " + m.games[m.cursor].Title
+				break
+			}
+			m.confirmDelete = false
+			return m, deleteCmd(m.db, m.games[m.cursor])
+
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		}
@@ -153,6 +180,14 @@ func (m libraryModel) Update(msg tea.Msg) (libraryModel, tea.Cmd) {
 			m.status = "Sync failed: " + msg.err.Error()
 		} else {
 			m.status = fmt.Sprintf("Synced %d games", msg.count)
+			return m, loadGamesCmd(m.db)
+		}
+
+	case gameDeletedMsg:
+		if msg.err != nil {
+			m.status = "Delete failed: " + msg.err.Error()
+		} else {
+			m.status = "Game deleted"
 			return m, loadGamesCmd(m.db)
 		}
 
