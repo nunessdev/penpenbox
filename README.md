@@ -15,7 +15,7 @@ A Linux-focused game library manager for your terminal!
 
 ### From source
 
-Requires [Go](https://go.dev/dl/) 1.26.3 or newer.
+Requires [Go](https://go.dev/dl/) 1.27.3 or newer.
 
 ```bash
 git clone https://github.com/nunessdev/penpenbox.git
