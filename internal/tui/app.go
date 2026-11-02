@@ -6,6 +6,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 	lipgloss "charm.land/lipgloss/v2"
 	"github.com/nunessdev/penpenbox/internal/config"
+	"github.com/nunessdev/penpenbox/internal/database"
+	"github.com/nunessdev/penpenbox/internal/models"
 )
 
 // Styles for different types of text
@@ -40,6 +42,7 @@ const (
 	screenPlatform screen = iota // iota makes these 0, 1, 2...
 	screenSteamSetup
 	screenLibrary
+	screenAddGame
 )
 
 // Messages that screens send to the root to request a switch.
@@ -48,6 +51,8 @@ type backToPlatformMsg struct{}
 type configSubmittedMsg struct{ apiKey, steamID string }
 type configSavedMsg struct{ err error }
 type openLibraryMsg struct{}
+type openAddGameMsg struct{}
+type gameAddedMsg struct{ err error }
 
 // Model is the root model. It owns every screen and tracks which is active.
 type Model struct {
@@ -55,6 +60,7 @@ type Model struct {
 	platform platformModel
 	steam    steamSetupModel
 	library  libraryModel
+	addGame  addGameModel
 }
 
 func New(db *sql.DB) Model {
@@ -63,6 +69,7 @@ func New(db *sql.DB) Model {
 		platform: NewPlatformModel(),
 		steam:    NewSteamSetupModel(),
 		library:  NewLibraryModel(db),
+		addGame:  NewAddGameModel(),
 	}
 
 	// If a valid config already exists, skip to library
@@ -101,6 +108,35 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.screen = screenLibrary
 		return m, nil
 
+	case openAddGameMsg:
+		m.addGame = NewAddGameModel() // fresh form each time
+		m.screen = screenAddGame
+		return m, nil
+
+	case addGameSubmittedMsg:
+		db := m.library.db
+		return m, func() tea.Msg {
+			id, err := database.NextAppID(db, msg.platform)
+			if err != nil {
+				return gameAddedMsg{err: err}
+			}
+			err = database.AddGame(db, models.Game{
+				AppID:    id,
+				Title:    msg.title,
+				Platform: msg.platform,
+				Playtime: msg.playtime,
+			})
+			return gameAddedMsg{err: err}
+		}
+
+	case gameAddedMsg:
+		if msg.err != nil {
+			m.addGame.errMsg = "Could not add game: " + msg.err.Error()
+			return m, nil
+		}
+		m.screen = screenLibrary
+		return m, loadGamesCmd(m.library.db)
+
 	// User submitted a config for Steam
 	case configSubmittedMsg:
 		return m, func() tea.Msg {
@@ -125,6 +161,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg, gamesLoadedMsg:
 		m.library, _ = m.library.Update(msg)
 		return m, nil
+
 	}
 
 	// Everything else goes to the active screen.
@@ -138,6 +175,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case screenLibrary:
 		m.library, cmd = m.library.Update(msg)
+
+	case screenAddGame:
+		m.addGame, cmd = m.addGame.Update(msg)
 	}
 	return m, cmd
 }
@@ -155,6 +195,9 @@ func (m Model) View() tea.View {
 
 	case screenLibrary:
 		content = m.library.View()
+
+	case screenAddGame:
+		content = m.addGame.View()
 	}
 
 	v := tea.NewView(content)

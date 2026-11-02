@@ -106,3 +106,15 @@ func ListGames(db *sql.DB) ([]models.Game, error) {
 
 	return games, nil
 }
+
+func NextAppID(db *sql.DB, platform string) (int, error) {
+	var id int
+	err := db.QueryRow(
+		`SELECT COALESCE(MAX(AppID), 0) + 1 FROM games WHERE Platform = ?`,
+		platform,
+	).Scan(&id)
+	if err != nil {
+		return 0, fmt.Errorf("next app id: %w", err)
+	}
+	return id, nil
+}

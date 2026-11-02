@@ -133,6 +133,9 @@ func (m libraryModel) Update(msg tea.Msg) (libraryModel, tea.Cmd) {
 		case "c":
 			return m, func() tea.Msg { return backToPlatformMsg{} }
 
+		case "a":
+			return m, func() tea.Msg { return openAddGameMsg{} }
+
 		case "d":
 			if len(m.games) == 0 {
 				break
@@ -238,6 +241,6 @@ func (m libraryModel) View() string {
 		s += "\n" + textStyle.Render(m.status) + "\n"
 	}
 
-	s += textStyle.Render("↑/↓: navigate • r: resync library • c: configure platform • q: quit") + "\n"
+	s += textStyle.Render("↑/↓: navigate • a: add game manually • d: delete game • r: resync library • c: configure platform • q: quit") + "\n"
 	return s
 }
