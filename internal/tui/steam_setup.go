@@ -11,12 +11,14 @@ type steamSetupModel struct {
 	apiKey  textinput.Model
 	steamID textinput.Model
 	focused int // 0 = apiKey, 1 = steamID
+	errMsg  string
 }
 
 func NewSteamSetupModel() steamSetupModel {
 	apiKey := textinput.New()
 	apiKey.Placeholder = "Steam API key"
 	apiKey.SetWidth(40)
+	apiKey.EchoMode = textinput.EchoPassword
 	apiKey.Focus()
 
 	steamID := textinput.New()
@@ -70,11 +72,17 @@ func (m steamSetupModel) Update(msg tea.Msg) (steamSetupModel, tea.Cmd) {
 }
 
 func (m steamSetupModel) View() string {
-	return titleStyle.Render("Steam setup") + "\n\n" +
+	s := titleStyle.Render("Steam setup") + "\n\n" +
 		textStyle.Render("Steam API requires a Steam API key to work. Refer to https://github.com/nunessdev/penpenbox for instructions on how to get one!") + "\n" +
 		textStyle.Render("It also requires the Steam User ID of the profile you want to track (make sure your profile is set to public)!") + "\n\n" +
 		textStyle.Render(m.apiKey.View()) + "\n" +
 		textStyle.Render(m.steamID.View()) + "\n" +
-		textStyle.Render("The config will be saved on ~/.config/penpenbox/") + "\n\n" +
-		textStyle.Render("↑/↓: navigate • enter: submit • esc: back") + "\n"
+		textStyle.Render("The config will be saved on ~/.config/penpenbox/") + "\n\n"
+
+	if m.errMsg != "" {
+		s += errorStyle.Render(m.errMsg) + "\n\n"
+	}
+
+	s += textStyle.Render("↑/↓: navigate • enter: submit • esc: back") + "\n"
+	return s
 }

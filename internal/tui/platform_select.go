@@ -43,6 +43,8 @@ func (m platformModel) Update(msg tea.Msg) (platformModel, tea.Cmd) {
 			if !m.platforms[m.cursor].disabled {
 				return m, func() tea.Msg { return openSteamSetupMsg{} }
 			}
+		case "esc":
+			return m, func() tea.Msg { return openLibraryMsg{} }
 		}
 	}
 	return m, nil
@@ -68,7 +70,7 @@ func (m platformModel) View() string {
 			s += textStyle.Render(fmt.Sprintf("%s %s", cursor, choice.name)) + "\n"
 		}
 	}
-	s += "\n" + textStyle.Render("↑/↓: navigate • enter: select • q: quit") + "\n"
+	s += "\n" + textStyle.Render("↑/↓: navigate • enter: select • esc: back • q: quit") + "\n"
 
 	return s
 }

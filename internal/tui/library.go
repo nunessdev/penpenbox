@@ -67,6 +67,37 @@ func loadGamesCmd(db *sql.DB) tea.Cmd {
 	}
 }
 
+func formatPlaytime(minutes *int) string {
+	if minutes == nil || *minutes <= 0 {
+		return "never played"
+	}
+	if *minutes < 60 {
+		return fmt.Sprintf("%dm", *minutes)
+	}
+	return fmt.Sprintf("%.1fh", float64(*minutes)/60)
+}
+
+func truncate(s string, width int) string {
+	r := []rune(s)
+	if len(r) <= width {
+		return s
+	}
+	return string(r[:width-3]) + "..."
+}
+func (m libraryModel) titleWidth() int {
+	const (
+		leftPad  = 4
+		rightMax = 8 + 2 + 12 // platform + gap + playtime columns
+		gap      = 2          // space between title and right part
+		margin   = 4          // space kept on the right edge
+	)
+	w := m.width - leftPad - rightMax - gap - margin
+	if w < 10 {
+		return 10 // never let the title collapse completely
+	}
+	return w
+}
+
 func (m libraryModel) Init() tea.Cmd {
 	return loadGamesCmd(m.db)
 }
@@ -85,6 +116,10 @@ func (m libraryModel) Update(msg tea.Msg) (libraryModel, tea.Cmd) {
 			if m.cursor < len(m.games)-1 {
 				m.cursor++
 			}
+		case "c":
+			return m, func() tea.Msg { return backToPlatformMsg{} }
+		case "ctrl+c", "q":
+			return m, tea.Quit
 		}
 
 		// keep the cursor inside the visible window
@@ -158,13 +193,16 @@ func (m libraryModel) View() string {
 		if i == m.cursor {
 			style = highlightedStyle
 		}
-		s += style.Render(m.games[i].Title) + "\n"
+		g := m.games[i]
+		tw := m.titleWidth()
+		line := fmt.Sprintf("%-*s  %-8s  %12s", tw, truncate(g.Title, tw), g.Platform, formatPlaytime(g.Playtime))
+		s += style.Render(line) + "\n"
 	}
 
 	if m.status != "" {
 		s += "\n" + textStyle.Render(m.status) + "\n"
 	}
 
-	s += textStyle.Render("↑/↓: navigate • r: resync library • q: quit") + "\n"
+	s += textStyle.Render("↑/↓: navigate • r: resync library • c: configure platform • q: quit") + "\n"
 	return s
 }

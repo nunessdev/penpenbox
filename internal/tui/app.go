@@ -27,6 +27,10 @@ var (
 	highlightedStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#7D56F4")).
 				PaddingLeft(4)
+
+	errorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FF5555")).
+			PaddingLeft(4)
 )
 
 // screen identifies which screen is currently active.
@@ -43,6 +47,7 @@ type openSteamSetupMsg struct{}
 type backToPlatformMsg struct{}
 type configSubmittedMsg struct{ apiKey, steamID string }
 type configSavedMsg struct{ err error }
+type openLibraryMsg struct{}
 
 // Model is the root model. It owns every screen and tracks which is active.
 type Model struct {
@@ -92,6 +97,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.screen = screenPlatform
 		return m, nil
 
+	case openLibraryMsg:
+		m.screen = screenLibrary
+		return m, nil
+
 	// User submitted a config for Steam
 	case configSubmittedMsg:
 		return m, func() tea.Msg {
@@ -105,10 +114,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case configSavedMsg:
 		if msg.err != nil {
-			return m, nil // save failed: TODO - Display an error message
+			m.steam.errMsg = "Could not save config: " + msg.err.Error()
+			return m, nil
 		}
 		m.screen = screenLibrary
-		return m, nil
+		m.library.syncing = true
+		m.library.status = "Syncing..."
+		return m, syncCmd(m.library.db)
 
 	case tea.WindowSizeMsg, gamesLoadedMsg:
 		m.library, _ = m.library.Update(msg)
