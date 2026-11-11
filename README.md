@@ -13,6 +13,13 @@ A Linux-focused game library manager for your terminal!
 
 ## Installation
 
+### From release
+
+Head over to the [releases](https://github.com/nunessdev/penpenbox/releases) page and download the package for your architecture. Extract and run with:
+```bash
+./penpenbox
+```
+
 ### From source
 
 Requires [Go](https://go.dev/dl/) 1.27.3 or newer.
